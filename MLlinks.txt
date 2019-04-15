@@ -1,3 +1,6 @@
 https://mattmazur.com/2015/03/17/a-step-by-step-backpropagation-example/  // backpropagation step by step calculus
 https://www.youtube.com/watch?v=aircAruvnKk&list=PLZHQObOWTQDNU6R1_67000Dx_ZCJB-3pi&index=2&t=0s  // Youtube 3Blue1Brown series
 https://www.youtube.com/watch?v=mOmkv5SI9hU&list=PLLssT5z_DsK-h9vYZkQkYNWcItqhlRJLN&index=52  // Andrew Ng youtube NN
+https://www.ii.pwr.edu.pl/~zieba/[W2_MIW].pdf  // prawdopodobienstwo
+https://www.ii.pwr.edu.pl/~tomczak/PDF/wstep_um.pdf  //wstep Tomczak
+https://www.youtube.com/watch?v=CPqOCI0ahss  //naive bayes
