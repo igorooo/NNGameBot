@@ -3,13 +3,14 @@ import sys
 import pygame
 import random
 import operator
+import colorsys
 from brain import NeuralNetwork
 from pygame.locals import *
 
 
 # CONSTANTS:
 
-FPS = 5
+FPS = 50
 SCREEN_WIDTH, SCREEN_HEIGHT = 640, 480
 
 BLACK = (0,   0,   0)
@@ -17,6 +18,14 @@ WHITE = (255, 255, 255)
 GREEN = (0, 255,   0)
 RED = (255,   0,   0)
 BLUE = (0,   0, 255)
+
+am_of_colors = 24
+l_colors = [(0, 0, 153), (0, 0, 230), (102, 102, 255), (179, 179, 255),
+            (115, 0, 153), (172, 0, 230), (210, 77, 255), (236, 179, 255),
+            (0, 102, 0), (0, 179, 0), (0, 255, 0), (179, 255, 179),
+            (128, 128, 0), (204, 204, 0), (255, 255, 77), (255, 255, 179),
+            (96, 64, 31), (154, 102, 50), (205, 153, 101), (224, 191, 159),
+            (128, 0, 0), (204, 0, 0), (255, 26, 26), (255, 153, 153)]
 
 LINE_1 = 3/9
 LINE_2 = 4/9
@@ -173,9 +182,12 @@ class Player(object):
     def installBrain(self, NN):
         self.NN = NN
 
+    def setColor(self, color):
+        self.color = color
+
     def crossover(self, B):
         child = Player(self.screen)
-        child.crossover(self.NN, B.NN)
+        child.NN.crossover(B.NN)
 
         return child
 
@@ -203,10 +215,6 @@ class Player(object):
         input[5, 0] = X.get(right_track)/100
 
         self.NN.forwardPropagation(input)
-        print(input.T)
-        print("result: ")
-        print(self.NN.Y.T)
-        print('\n\n')
 
         if(self.NN.Y[0, 0] == 1 and self.NN.Y[1, 0] == 0):
             self.move_left()
@@ -254,12 +262,22 @@ class Generations(object):
         self.screen = screen
         self.l_players = []
         self.l_loosers = []
+        self.colors = l_colors[:]
+        self.best_fit = 0
 
-        for i in xrange(self.amount):
+        while len(self.colors) < amount:
+            self.colors.append((100, 100, 100))
+
+        for i in range(0, self.amount):
             self.l_players.append(Player(self.screen))
+        self.setColor()
+
+    def setColor(self):
+        for player, color in zip(self.l_players, self.colors):
+            player.setColor(color)
 
     def createNextGen(self):
-        amoun_of_b = round(self.amount/3)
+        amount_of_b = round(self.amount/3)
 
         self.l_loosers.reverse()
         self.l_best = self.l_loosers[0:amount_of_b]
@@ -270,13 +288,14 @@ class Generations(object):
         for elem in self.l_best:
             self.l_players.append(elem)
 
-        while len(self.l_players < self.amount):
+        while len(self.l_players) < self.amount:
 
             parentA = random.choice(self.l_best)
             parentB = random.choice(self.l_best)
 
             self.l_players.append(parentA.crossover(parentB))
 
+        self.setColor()
         self.no_of_generation += 1
 
 
@@ -292,6 +311,8 @@ class Game(object):
         pygame.font.init()
         self.myfont = pygame.font.SysFont('Comic Sans MS', 25)
         self.logs = ""
+        self.best_fitness = ""
+        self.results = []
 
         self.l_players = []
         self.l_loosers = []
@@ -299,11 +320,17 @@ class Game(object):
         self.dict_fObs = self.obstacles.first_obstacles()
         self.textsurface = self.myfont.render(str(self.dict_fObs.values()), False, BLUE)
         self.textsurface2 = self.myfont.render(self.logs, False, RED)
+        self.gens = Generations(24, self.screen)
+
+        self.l_txt_surfs = []
+
+    def start(self):
+        for i in range(0, 10000):
+            self.play()
+            self.obstacles.restart()
+            self.gens.createNextGen()
 
     def play(self):
-
-        for i in range(0, 3):
-            self.l_players.append(Player(self.screen))
 
         done = False
 
@@ -315,9 +342,13 @@ class Game(object):
             self.update()
             self.check_for_crash()
 
-            if len(self.l_players) == 0:
+            if len(self.gens.l_players) == 0:
                 done = True
-                self.logs += "GAME OVER"
+                self.logs = "Generation Over"
+                self.results.append((self.gens.no_of_generation, self.gens.l_loosers[-1].points))
+                #self.best_fitness = str(self.gens.l_loosers[-1].points)
+                self.update()
+                self.logs = ''
                 pygame.time.wait(1000)
 
             self.fpsClock.tick(FPS)
@@ -330,37 +361,68 @@ class Game(object):
         self.obstacles.move()
         self.dict_fObs = self.obstacles.first_obstacles()
         self.textsurface = self.myfont.render(str(self.dict_fObs.values()), False, BLUE)
-        self.textsurface2 = self.myfont.render(self.logs, False, RED)
+        self.textsurface2 = self.myfont.render(
+            'Generation: '+str(self.gens.no_of_generation), False, RED)
+        self.textsurface3 = self.myfont.render(self.logs, False, RED)
+        if(len(self.gens.l_players) > 0):
+            self.textsurface4 = self.myfont.render(
+                'points: '+str(self.gens.l_players[0].points), False, RED)
+        else:
+            self.textsurface4 = self.myfont.render(
+                'points: '+str(self.gens.l_loosers[-1].points), False, GREEN)
+
         self.screen.blit(self.textsurface, (0, 0))
-        self.screen.blit(self.textsurface2, (SCREEN_WIDTH-300, 50))
+        self.screen.blit(self.textsurface2, (SCREEN_WIDTH-180, 0))
+        self.screen.blit(self.textsurface3, (SCREEN_WIDTH-180, 70))
+        self.screen.blit(self.textsurface4, (SCREEN_WIDTH-180, 140))
+
+        self.updateResults()
 
         pygame.display.flip()
+
+    def updateResults(self):
+
+        START_POINT = (SCREEN_WIDTH-200, 180)
+        heigh_step = 30
+
+        self.l_txt_surfs = []
+
+        i = 0
+        j = len(self.results)-1
+
+        while i < 6 and j > 0:
+            str1 = 'Gen: '+str(self.results[j][0])
+            str2 = ' best fit: '+str(self.results[j][1])
+            txt_surf = self.myfont.render(str1 + str2, False, BLUE)
+            self.screen.blit(txt_surf, (START_POINT[0], START_POINT[1] + i*heigh_step))
+            i += 1
+            j -= 1
 
     def check_for_crash(self):
         l_temp_loosers = []
         i = 0
-        for player in self.l_players:
+        for player in self.gens.l_players:
             if PLAYER_HEIGHT - self.dict_fObs.get(player.position) - Player.size - Obstacle.size < 0:
                 l_temp_loosers.append(player)
-                self.logs += "Nr"+str(i)+" crash\n(points: "+str(player.points)+")\n"
+                #self.logs += "Nr"+str(i)+" crash\n(points: "+str(player.points)+")\n"
             i += 1
         for player in l_temp_loosers:
-            self.l_loosers.append(player)
-            self.l_players.remove(player)
+            self.gens.l_loosers.append(player)
+            self.gens.l_players.remove(player)
 
     def draw_players(self):
-        for player in self.l_players:
+        for player in self.gens.l_players:
             player.draw()
             player.reward()
 
     def move_players(self):
-        for player in self.l_players:
+        for player in self.gens.l_players:
             player.move(self.dict_fObs)
 
 
 if __name__ == '__main__':
     game = Game()
-    game.play()
+    game.start()
 
 
 """"
