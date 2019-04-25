@@ -295,6 +295,9 @@ class Generations(object):
 
             self.l_players.append(parentA.crossover(parentB))
 
+        for player in self.l_players:
+            player.mutation()
+
         self.setColor()
         self.no_of_generation += 1
 

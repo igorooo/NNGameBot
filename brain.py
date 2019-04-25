@@ -57,25 +57,25 @@ class NeuralNetwork(object):
     def mutation(self):
         np.random.seed(1)
 
-        if(np.random.rand(1) > mutation_probability):
+        if(np.random.rand(1) > NeuralNetwork.mutation_probability):
             return False
 
         for i in range(0, 3):
-            if(np.random.rand(1) < bias_mut_prob):
+            if(np.random.rand(1) < NeuralNetwork.bias_mut_prob):
                 self.B_1[i, 0] = np.random.uniform(-2, 2, 1)[0]
 
         for i in range(0, 2):
-            if(np.random.rand(1) < bias_mut_prob):
+            if(np.random.rand(1) < NeuralNetwork.bias_mut_prob):
                 self.B_2[i, 0] = np.random.uniform(-2, 2, 1)[0]
 
         for i in range(0, 3):
             for j in range(0, 6):
-                if(np.random.rand(1) < theta_mut_prob):
+                if(np.random.rand(1) < NeuralNetwork.theta_mut_prob):
                     self.Theta_1[i, j] = np.random.uniform(-2, 2, 1)[0]
 
         for i in range(0, 2):
             for j in range(0, 3):
-                if(np.random.rand(1) < theta_mut_prob):
+                if(np.random.rand(1) < NeuralNetwork.theta_mut_prob):
                     self.Theta_2[i, j] = np.random.uniform(-2, 2, 1)[0]
 
         return True
