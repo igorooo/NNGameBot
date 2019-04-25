@@ -1,12 +1,15 @@
-
+import numpy as np
 import sys
 import pygame
 import random
+import operator
+from brain import NeuralNetwork
 from pygame.locals import *
+
 
 # CONSTANTS:
 
-FPS = 15
+FPS = 5
 SCREEN_WIDTH, SCREEN_HEIGHT = 640, 480
 
 BLACK = (0,   0,   0)
@@ -96,6 +99,10 @@ class Obstacles(object):
         self.last = None
         self.space = space
 
+    def restart(self):
+        self.l_obstacles = []
+        self.last = None
+
     # internal funct
     def add_obs(self):
         position = random.choice(l_start_obs)
@@ -161,6 +168,53 @@ class Player(object):
         self.position = random.choice(l_player_pos)
         self.screen = screen
         self.points = 0
+        self.NN = NeuralNetwork()
+
+    def installBrain(self, NN):
+        self.NN = NN
+
+    def crossover(self, B):
+        child = Player(self.screen)
+        child.crossover(self.NN, B.NN)
+
+        return child
+
+    def mutation(self):
+        self.NN.mutation()
+
+    def move(self, X):
+
+        if(self.NN == None):
+            return False
+
+        input = np.zeros((6, 1))
+
+        if(self.position == left_track):
+            input[0, 0] = 1
+        if(self.position == middle_track):
+            input[1, 0] = 1
+        if(self.position == right_track):
+            input[2, 0] = 1
+
+        input *= 3
+
+        input[3, 0] = X.get(left_track)/100
+        input[4, 0] = X.get(middle_track)/100
+        input[5, 0] = X.get(right_track)/100
+
+        self.NN.forwardPropagation(input)
+        print(input.T)
+        print("result: ")
+        print(self.NN.Y.T)
+        print('\n\n')
+
+        if(self.NN.Y[0, 0] == 1 and self.NN.Y[1, 0] == 0):
+            self.move_left()
+
+        if(self.NN.Y[0, 0] == 0 and self.NN.Y[1, 0] == 1):
+            self.move_right()
+
+        return True
 
     def position(self):
         return position
@@ -192,6 +246,40 @@ class Player(object):
         self.points += 1
 
 
+class Generations(object):
+
+    def __init__(self, amount, screen):
+        self.amount = amount
+        self.no_of_generation = 1
+        self.screen = screen
+        self.l_players = []
+        self.l_loosers = []
+
+        for i in xrange(self.amount):
+            self.l_players.append(Player(self.screen))
+
+    def createNextGen(self):
+        amoun_of_b = round(self.amount/3)
+
+        self.l_loosers.reverse()
+        self.l_best = self.l_loosers[0:amount_of_b]
+
+        self.l_players = []
+        self.l_loosers = []
+
+        for elem in self.l_best:
+            self.l_players.append(elem)
+
+        while len(self.l_players < self.amount):
+
+            parentA = random.choice(self.l_best)
+            parentB = random.choice(self.l_best)
+
+            self.l_players.append(parentA.crossover(parentB))
+
+        self.no_of_generation += 1
+
+
 class Game(object):
 
     def __init__(self):
@@ -214,7 +302,7 @@ class Game(object):
 
     def play(self):
 
-        for i in range(0, 10):
+        for i in range(0, 3):
             self.l_players.append(Player(self.screen))
 
         done = False
@@ -235,6 +323,7 @@ class Game(object):
             self.fpsClock.tick(FPS)
 
     def update(self):
+        self.move_players()
         self.draw_players()
         self.obstacles.add_obstacle()
         self.obstacles.draw()
@@ -264,9 +353,14 @@ class Game(object):
             player.draw()
             player.reward()
 
+    def move_players(self):
+        for player in self.l_players:
+            player.move(self.dict_fObs)
 
-game = Game()
-game.play()
+
+if __name__ == '__main__':
+    game = Game()
+    game.play()
 
 
 """"
