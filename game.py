@@ -181,6 +181,7 @@ class Player(object):
         self.screen = screen
         self.points = 0
         self.NN = NeuralNetwork()
+        self.record = 0
 
     def installBrain(self, NN):
         self.NN = NN
@@ -231,8 +232,6 @@ class Player(object):
 
         return True
 
-    def position(self):
-        return position
 
     def draw(self):
         pygame.draw.circle(self.screen, self.color, self.position, Player.size)
@@ -260,6 +259,10 @@ class Player(object):
     def reward(self):
         self.points += 1
 
+    def setRecord(self):
+        if self.points > self.record:
+            self.record = self.points
+
 
 class Generations(object):
 
@@ -270,7 +273,7 @@ class Generations(object):
         self.l_players = []
         self.l_loosers = []
         self.colors = l_colors[:]
-        self.best_fit = 0
+        self.record = 0
 
         while len(self.colors) < amount:
             self.colors.append((100, 100, 100))
@@ -306,8 +309,11 @@ class Generations(object):
 
     def takeBest(self):
         amount_of_b = round(self.amount/3)
-        self.l_loosers.sort(key=operator.attrgetter('points'))
+        self.l_loosers.sort(key=operator.attrgetter('record'))
         self.l_best = self.l_loosers[:amount_of_b]
+        if self.l_best[0].record > self.record:
+            self.record = self.l_best[0].record
+
 
 
 class Game(object):
@@ -324,6 +330,7 @@ class Game(object):
         self.logs = ""
         self.best_fitness = ""
         self.results = []
+        self.record = 0
 
         self.l_players = []
         self.l_loosers = []
@@ -331,6 +338,7 @@ class Game(object):
         self.dict_fObs = self.obstacles.first_obstacles()
         self.textsurface = self.myfont.render(str(self.dict_fObs.values()), False, BLUE)
         self.textsurface2 = self.myfont.render(self.logs, False, RED)
+        self.textsurfaceRecord = self.myfont.render(str(self.record), False, GREEN)
         self.gens = Generations(24, self.screen)
 
         self.points = 0
@@ -366,6 +374,8 @@ class Game(object):
             self.fpsClock.tick(FPS)
 
     def update(self):
+        if self.points > self.record:
+            self.record = self.points
         self.move_players()
         self.draw_players()
         self.obstacles.add_obstacle()
@@ -378,10 +388,15 @@ class Game(object):
         self.textsurface3 = self.myfont.render(self.logs, False, RED)
         self.textsurface4 = self.myfont.render(
             'points: '+str(self.points), False, RED)
+        self.textsurfaceRecord = self.myfont.render('Record= ' +str(self.record), False, GREEN)
         self.screen.blit(self.textsurface, (0, 0))
         self.screen.blit(self.textsurface2, (SCREEN_WIDTH-180, 0))
         self.screen.blit(self.textsurface3, (SCREEN_WIDTH-180, 70))
         self.screen.blit(self.textsurface4, (SCREEN_WIDTH-180, 140))
+        self.screen.blit(self.textsurfaceRecord, (50, 250))
+
+
+
 
         self.updateResults()
 
@@ -418,6 +433,7 @@ class Game(object):
         for player in self.gens.l_players:
             player.draw()
             player.reward()
+            player.setRecord()
 
     def move_players(self):
         for player in self.gens.l_players:

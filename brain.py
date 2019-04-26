@@ -7,7 +7,7 @@ def act(x):
 
 
 def crossFunct(W1, W2):
-    return (2*W1 + W2)/3
+    return (4*W1 + W2)/5
 
 
 class NeuralNetwork(object):
@@ -18,7 +18,7 @@ class NeuralNetwork(object):
     theta_mut_prob = 0.1
 
     N_INPUT_NEURONS = 6
-    N_HIDDEN_NEURONS = 3
+    N_HIDDEN_NEURONS = 18
     N_OUT_NEURONS = 2
 
     def __init__(self):
