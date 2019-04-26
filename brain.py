@@ -7,15 +7,19 @@ def act(x):
 
 
 def crossFunct(W1, W2):
-    return (4*W1 + W2)/5
+    return (2*W1 + W2)/3
 
 
 class NeuralNetwork(object):
 
     # 0 <= x <= 1
-    mutation_probability = 0.1
-    bias_mut_prob = 0.1
-    theta_mut_prob = 0.05
+    mutation_probability = 0.3
+    bias_mut_prob = 0.2
+    theta_mut_prob = 0.1
+
+    N_INPUT_NEURONS = 6
+    N_HIDDEN_NEURONS = 3
+    N_OUT_NEURONS = 2
 
     def __init__(self):
         self.act = np.vectorize(act)
@@ -23,10 +27,12 @@ class NeuralNetwork(object):
 
         self.fitness = 0
 
-        self.Theta_1 = np.random.uniform(-2, 2, (3, 6))
-        self.Theta_2 = np.random.uniform(-2, 2, (2, 3))
-        self.B_1 = np.random.uniform(-2, 2, (3, 1))
-        self.B_2 = np.random.uniform(-2, 2, (2, 1))
+        self.Theta_1 = np.random.uniform(-2, 2,
+                                         (NeuralNetwork.N_HIDDEN_NEURONS, NeuralNetwork.N_INPUT_NEURONS))
+        self.Theta_2 = np.random.uniform(-2, 2, (NeuralNetwork.N_OUT_NEURONS,
+                                                 NeuralNetwork.N_HIDDEN_NEURONS))
+        self.B_1 = np.random.uniform(-2, 2, (NeuralNetwork.N_HIDDEN_NEURONS, 1))
+        self.B_2 = np.random.uniform(-2, 2, (NeuralNetwork.N_OUT_NEURONS, 1))
 
     def setThetaBias(self, Theta_1, Theta_2, B_1, B_2):
         self.Theta_1 = Theta_1
@@ -60,21 +66,21 @@ class NeuralNetwork(object):
         if(np.random.rand(1) > NeuralNetwork.mutation_probability):
             return False
 
-        for i in range(0, 3):
+        for i in range(0, NeuralNetwork.N_HIDDEN_NEURONS):
             if(np.random.rand(1) < NeuralNetwork.bias_mut_prob):
                 self.B_1[i, 0] = np.random.uniform(-2, 2, 1)[0]
 
-        for i in range(0, 2):
+        for i in range(0, NeuralNetwork.N_OUT_NEURONS):
             if(np.random.rand(1) < NeuralNetwork.bias_mut_prob):
                 self.B_2[i, 0] = np.random.uniform(-2, 2, 1)[0]
 
-        for i in range(0, 3):
-            for j in range(0, 6):
+        for i in range(0, NeuralNetwork.N_HIDDEN_NEURONS):
+            for j in range(0, NeuralNetwork.N_INPUT_NEURONS):
                 if(np.random.rand(1) < NeuralNetwork.theta_mut_prob):
                     self.Theta_1[i, j] = np.random.uniform(-2, 2, 1)[0]
 
-        for i in range(0, 2):
-            for j in range(0, 3):
+        for i in range(0, NeuralNetwork.N_OUT_NEURONS):
+            for j in range(0, NeuralNetwork.N_HIDDEN_NEURONS):
                 if(np.random.rand(1) < NeuralNetwork.theta_mut_prob):
                     self.Theta_2[i, j] = np.random.uniform(-2, 2, 1)[0]
 

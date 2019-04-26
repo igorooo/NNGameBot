@@ -10,7 +10,7 @@ from pygame.locals import *
 
 # CONSTANTS:
 
-FPS = 150
+FPS = 200
 SCREEN_WIDTH, SCREEN_HEIGHT = 640, 480
 
 BLACK = (0,   0,   0)
@@ -40,6 +40,7 @@ OBS_SPACE = 150
 
 # for players positions
 REWARD_TRESHOLD = 300
+REWARD_FOR_MOVE = 200
 
 left_track = int(((LINE_1+LINE_2)/2.0)*SCREEN_WIDTH),  PLAYER_HEIGHT
 middle_track = int(((LINE_2+LINE_3)/2.0)*SCREEN_WIDTH),  PLAYER_HEIGHT
@@ -220,12 +221,12 @@ class Player(object):
 
         if(self.NN.Y[0, 0] == 1 and self.NN.Y[1, 0] == 0):
             if(X.get(self.position) > REWARD_TRESHOLD):
-                self.points += 200
+                self.points += REWARD_FOR_MOVE
             self.move_left()
 
         if(self.NN.Y[0, 0] == 0 and self.NN.Y[1, 0] == 1):
             if(X.get(self.position) > REWARD_TRESHOLD):
-                self.points += 200
+                self.points += REWARD_FOR_MOVE
             self.move_right()
 
         return True
@@ -283,11 +284,7 @@ class Generations(object):
             player.setColor(color)
 
     def createNextGen(self):
-        amount_of_b = round(self.amount/3)
-
-        self.l_loosers.reverse()
-        self.l_best = self.l_loosers[0:amount_of_b]
-
+        self.takeBest()
         self.l_players = []
         self.l_loosers = []
 
@@ -306,6 +303,11 @@ class Generations(object):
 
         self.setColor()
         self.no_of_generation += 1
+
+    def takeBest(self):
+        amount_of_b = round(self.amount/3)
+        self.l_loosers.sort(key=operator.attrgetter('points'))
+        self.l_best = self.l_loosers[:amount_of_b]
 
 
 class Game(object):
