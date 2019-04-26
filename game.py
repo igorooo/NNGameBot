@@ -10,7 +10,7 @@ from pygame.locals import *
 
 # CONSTANTS:
 
-FPS = 50
+FPS = 150
 SCREEN_WIDTH, SCREEN_HEIGHT = 640, 480
 
 BLACK = (0,   0,   0)
@@ -39,6 +39,8 @@ OBS_STEP = 5
 OBS_SPACE = 150
 
 # for players positions
+REWARD_TRESHOLD = 300
+
 left_track = int(((LINE_1+LINE_2)/2.0)*SCREEN_WIDTH),  PLAYER_HEIGHT
 middle_track = int(((LINE_2+LINE_3)/2.0)*SCREEN_WIDTH),  PLAYER_HEIGHT
 right_track = int(((LINE_3+LINE_4)/2.0)*SCREEN_WIDTH),  PLAYER_HEIGHT
@@ -217,9 +219,13 @@ class Player(object):
         self.NN.forwardPropagation(input)
 
         if(self.NN.Y[0, 0] == 1 and self.NN.Y[1, 0] == 0):
+            if(X.get(self.position) > REWARD_TRESHOLD):
+                self.points += 200
             self.move_left()
 
         if(self.NN.Y[0, 0] == 0 and self.NN.Y[1, 0] == 1):
+            if(X.get(self.position) > REWARD_TRESHOLD):
+                self.points += 200
             self.move_right()
 
         return True
@@ -325,10 +331,11 @@ class Game(object):
         self.textsurface2 = self.myfont.render(self.logs, False, RED)
         self.gens = Generations(24, self.screen)
 
-        self.l_txt_surfs = []
+        self.points = 0
 
     def start(self):
         for i in range(0, 10000):
+            self.points = 0
             self.play()
             self.obstacles.restart()
             self.gens.createNextGen()
@@ -348,12 +355,12 @@ class Game(object):
             if len(self.gens.l_players) == 0:
                 done = True
                 self.logs = "Generation Over"
-                self.results.append((self.gens.no_of_generation, self.gens.l_loosers[-1].points))
+                self.results.append((self.gens.no_of_generation, self.points))
                 #self.best_fitness = str(self.gens.l_loosers[-1].points)
                 self.update()
                 self.logs = ''
                 pygame.time.wait(1000)
-
+            self.points += 1
             self.fpsClock.tick(FPS)
 
     def update(self):
@@ -367,13 +374,8 @@ class Game(object):
         self.textsurface2 = self.myfont.render(
             'Generation: '+str(self.gens.no_of_generation), False, RED)
         self.textsurface3 = self.myfont.render(self.logs, False, RED)
-        if(len(self.gens.l_players) > 0):
-            self.textsurface4 = self.myfont.render(
-                'points: '+str(self.gens.l_players[0].points), False, RED)
-        else:
-            self.textsurface4 = self.myfont.render(
-                'points: '+str(self.gens.l_loosers[-1].points), False, GREEN)
-
+        self.textsurface4 = self.myfont.render(
+            'points: '+str(self.points), False, RED)
         self.screen.blit(self.textsurface, (0, 0))
         self.screen.blit(self.textsurface2, (SCREEN_WIDTH-180, 0))
         self.screen.blit(self.textsurface3, (SCREEN_WIDTH-180, 70))
@@ -384,16 +386,13 @@ class Game(object):
         pygame.display.flip()
 
     def updateResults(self):
-
         START_POINT = (SCREEN_WIDTH-200, 180)
         heigh_step = 30
-
-        self.l_txt_surfs = []
 
         i = 0
         j = len(self.results)-1
 
-        while i < 6 and j > 0:
+        while i < 10 and j > 0:
             str1 = 'Gen: '+str(self.results[j][0])
             str2 = ' best fit: '+str(self.results[j][1])
             txt_surf = self.myfont.render(str1 + str2, False, BLUE)

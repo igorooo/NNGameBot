@@ -7,15 +7,15 @@ def act(x):
 
 
 def crossFunct(W1, W2):
-    return (2*W1 + W2)/3
+    return (4*W1 + W2)/5
 
 
 class NeuralNetwork(object):
 
     # 0 <= x <= 1
-    mutation_probability = 0.2
-    bias_mut_prob = 0.3
-    theta_mut_prob = 0.1
+    mutation_probability = 0.1
+    bias_mut_prob = 0.1
+    theta_mut_prob = 0.05
 
     def __init__(self):
         self.act = np.vectorize(act)
