@@ -13,13 +13,18 @@ def crossFunct(W1, W2):
 class NeuralNetwork(object):
 
     # 0 <= x <= 1
-    mutation_probability = 0.3
+    mutation_probability = 0.1
     bias_mut_prob = 0.2
     theta_mut_prob = 0.1
+    """
+    TO DO alfa
+    """
 
     N_INPUT_NEURONS = 6
     N_HIDDEN_NEURONS = 18
     N_OUT_NEURONS = 2
+
+    RANDOM_T = (0, 1, None) # * 0,5 in gausian distribution
 
     def __init__(self):
         self.act = np.vectorize(act)
